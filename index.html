@@ -63,22 +63,7 @@
   const textInput = document.querySelector('.add-form-text');
   const addButton = document.querySelector('.add-form-button');
 
-  let comments = [
-    {
-      name: "Глеб Фокин",
-      date: "12.02.22 12:18",
-      text: "Это будет первый комментарий на этой странице",
-      likes: 3,
-      isLiked: false,
-    },
-    {
-      name: "Варвара Н.",
-      date: "13.02.22 19:22",
-      text: "Мне нравится как оформлена эта страница! ❤",
-      likes: 75,
-      isLiked: true,
-    }
-  ];
+  let comments = [];
 
   function getCurrentDate() {
     const now = new Date();
@@ -113,27 +98,26 @@
   function renderComments() {
     const commentsHtml = comments.map((comment, index) => {
       return `
-    <li class="comment" data-index="${index}">
-      <div class="comment-header">
-        <div>${comment.name}</div>
-        <div>${comment.date}</div>
-      </div>
-      <div class="comment-body">
-        <div class="comment-text">${comment.text}</div>
-      </div>
-      <div class="comment-footer">
-        <div class="likes">
-          <span class="likes-counter">${comment.likes}</span>
-          <button class="like-button ${comment.isLiked ? '-active-like' : ''}" data-index="${index}"></button>
+      <li class="comment" data-index="${index}">
+        <div class="comment-header">
+          <div>${comment.name}</div>
+          <div>${comment.date}</div>
         </div>
-      </div>
-    </li>`;
+        <div class="comment-body">
+          <div class="comment-text">${comment.text}</div>
+        </div>
+        <div class="comment-footer">
+          <div class="likes">
+            <span class="likes-counter">${comment.likes || 0}</span>
+            <button class="like-button ${comment.isLiked ? '-active-like' : ''}" data-index="${index}"></button>
+          </div>
+        </div>
+      </li>`;
     }).join('');
 
     commentsList.innerHTML = commentsHtml;
 
-    const likeButtons = document.querySelectorAll('.like-button');
-    likeButtons.forEach(button => {
+    document.querySelectorAll('.like-button').forEach(button => {
       button.addEventListener('click', (e) => {
         e.stopPropagation();
         const index = button.dataset.index;
@@ -141,18 +125,17 @@
 
         if (comment.isLiked) {
           comment.isLiked = false;
-          comment.likes -= 1;
+          comment.likes = Math.max(0, comment.likes - 1);
         } else {
           comment.isLiked = true;
-          comment.likes += 1;
+          comment.likes = (comment.likes || 0) + 1;
         }
 
         renderComments();
       });
     });
 
-    const commentElements = document.querySelectorAll('.comment');
-    commentElements.forEach(comment => {
+    document.querySelectorAll('.comment').forEach(comment => {
       comment.addEventListener('click', handleCommentClick);
     });
   }
@@ -169,26 +152,66 @@
     return true;
   }
 
-  addButton.addEventListener('click', function () {
-    if (!validateForm()) {
-      return;
-    }
+  function loadComments() {
+    fetch("https://wedev-api.sky.pro/api/v1/Timur/comments")
+      .then(response => response.json())
+      .then(data => {
+        comments = data.comments.map(comment => ({
+          name: comment.author.name,
+          date: new Date(comment.date).toLocaleString('ru-RU'),
+          text: escapeHtml(comment.text),
+          likes: 0,
+          isLiked: false,
+        }));
+        renderComments();
+      })
+      .catch(error => {
+        console.error('Ошибка загрузки комментариев:', error);
+        alert('Не удалось загрузить комментарии, попробуйте позже.');
+      });
+  }
 
-    const newComment = {
-      name: escapeHtml(nameInput.value.trim()),
-      date: getCurrentDate(),
-      text: escapeHtml(textInput.value.trim()),
-      likes: 0,
-      isLiked: false,
-    };
+  function addCommentToAPI(name, text) {
+    return fetch("https://wedev-api.sky.pro/api/v1/Timur/comments", {
+      method: "POST",
+      body: JSON.stringify({
+        name: name,
+        text: text,
+      }),
 
-    comments.push(newComment);
-    renderComments();
+    }).then(response => {
+      if (!response.ok) {
+        throw new Error("Ошибка при добавлении комментария");
+      }
+      return response.json();
+    });
+  }
 
-    nameInput.value = '';
-    textInput.value = '';
+  addButton.addEventListener('click', () => {
+    if (!validateForm()) return;
+
+    const name = escapeHtml(nameInput.value.trim());
+    const text = escapeHtml(textInput.value.trim());
+
+    addButton.disabled = true;
+    addButton.textContent = "Добавление...";
+
+    addCommentToAPI(name, text)
+      .then(() => {
+        nameInput.value = '';
+        textInput.value = '';
+        return loadComments();
+      })
+      .catch(error => {
+        console.error(error);
+        alert('Не удалось добавить комментарий, попробуйте позже.');
+      })
+      .finally(() => {
+        addButton.disabled = false;
+        addButton.textContent = "Добавить";
+      });
   });
-  renderComments();
+
   textInput.addEventListener('keypress', function (e) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -196,8 +219,8 @@
     }
   });
 
-  console.log("It works!");
-</script>
+  loadComments();
 
+</script>
 
 </html>
