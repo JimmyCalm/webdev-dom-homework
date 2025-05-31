@@ -5,12 +5,20 @@
   <title>Проект "Комменты"</title>
   <meta charset="utf-8" />
   <link rel="stylesheet" href="styles.css" />
-  
+
 </head>
 
 <body>
   <div class="container">
-    <ul class="comments">
+    <div class="loading-indicator" style="display: none;">
+      Идёт загрузка комментариев...
+    </div>
+
+    <div class="initial-loading">
+      Загрузка комментариев...
+    </div>
+
+    <ul class="comments" style="display: none;">
       <li class="comment">
         <div class="comment-header">
           <div>Глеб Фокин</div>
@@ -56,5 +64,5 @@
   </div>
   <script type="module" src="js/script.js"></script>
 </body>
+
 </html>
-<!-- я всё исправил ещё в прошлой ветке -->

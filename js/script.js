@@ -7,31 +7,40 @@ const elements = {
     nameInput: document.querySelector('.add-form-name'),
     textInput: document.querySelector('.add-form-text'),
     addButton: document.querySelector('.add-form-button'),
-    loadingIndicator: document.querySelector('.loading-indicator')
+    loadingIndicator: document.querySelector('.loading-indicator'),
+    initialLoading: document.querySelector('.initial-loading')
 };
 
 let comments = [];
-let isLoading = false;
+let isAddingComment = false;
 
 function init() {
+    showInitialLoading();
     loadComments();
     setupEventListeners();
 }
 
-function loadComments() {
-    toggleLoading(true);
+function showInitialLoading() {
+    elements.initialLoading.style.display = 'block';
+    elements.commentsList.style.display = 'none';
+}
 
+function hideInitialLoading() {
+    elements.initialLoading.style.display = 'none';
+    elements.commentsList.style.display = 'block';
+}
+
+function loadComments() {
     getComments()
         .then(data => {
             comments = data;
             renderComments();
+            hideInitialLoading();
         })
         .catch(error => {
             showError('Не удалось загрузить комментарии');
             console.error(error);
-        })
-        .finally(() => {
-            toggleLoading(false);
+            hideInitialLoading();
         });
 }
 
@@ -75,14 +84,14 @@ function setupEventListeners() {
 }
 
 function handleAddComment() {
-    if (!validateForm() || isLoading) return;
+    if (!validateForm() || isAddingComment) return;
 
     const commentData = {
         name: elements.nameInput.value.trim(),
         text: elements.textInput.value.trim()
     };
 
-    toggleLoading(true);
+    isAddingComment = true;
     disableForm(true);
 
     postComment(commentData)
@@ -97,7 +106,7 @@ function handleAddComment() {
         })
         .finally(() => {
             disableForm(false);
-            toggleLoading(false);
+            isAddingComment = false;
         });
 }
 
@@ -143,13 +152,6 @@ function escapeHtml(unsafe) {
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#039;');
-}
-
-function toggleLoading(state) {
-    isLoading = state;
-    if (elements.loadingIndicator) {
-        elements.loadingIndicator.style.display = state ? 'block' : 'none';
-    }
 }
 
 function disableForm(state) {
