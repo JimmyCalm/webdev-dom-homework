@@ -31,6 +31,12 @@ function hideInitialLoading() {
 }
 
 function loadComments() {
+    if (!navigator.onLine) {
+        showError("Нет интернета. Комментарии не загружены.");
+        hideInitialLoading();
+        return;
+    }
+
     getComments()
         .then(data => {
             comments = data;
@@ -38,8 +44,11 @@ function loadComments() {
             hideInitialLoading();
         })
         .catch(error => {
-            showError('Не удалось загрузить комментарии');
-            console.error(error);
+            if (error.message === "Failed to fetch") {
+                showError("Нет подключения к интернету.");
+            } else {
+                showError("Не удалось загрузить комментарии");
+            }
             hideInitialLoading();
         });
 }
@@ -84,6 +93,11 @@ function setupEventListeners() {
 }
 
 function handleAddComment() {
+    if (!navigator.onLine) {
+        showError("Нет интернета. Комментарий не отправлен.");
+        return;
+    }
+
     if (!validateForm() || isAddingComment) return;
 
     const commentData = {
@@ -101,7 +115,13 @@ function handleAddComment() {
             return loadComments();
         })
         .catch(error => {
-            showError('Не удалось добавить комментарий');
+            if (error.message === "network_error") {
+                showError("Нет интернет-соединения. Проверьте подключение.");
+            } else if (error.message === "server_error_500") {
+                showError("Ошибка сервера. Пожалуйста, попробуйте позже.");
+            } else {
+                showError("Не удалось добавить комментарий: " + error.message);
+            }
             console.error(error);
         })
         .finally(() => {
@@ -132,14 +152,23 @@ function handleCommentClick(event) {
 }
 
 function validateForm() {
-    if (!elements.nameInput.value.trim()) {
+    const name = elements.nameInput.value.trim();
+    const text = elements.textInput.value.trim();
+
+    if (!name) {
         showError('Введите имя');
-        elements.nameInput.focus();
         return false;
     }
-    if (!elements.textInput.value.trim()) {
+    if (name.length < 3) {
+        showError('Имя должно быть не короче 3 символов');
+        return false;
+    }
+    if (!text) {
         showError('Введите комментарий');
-        elements.textInput.focus();
+        return false;
+    }
+    if (text.length < 3) {
+        showError('Комментарий должен быть не короче 3 символов');
         return false;
     }
     return true;
