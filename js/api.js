@@ -27,14 +27,23 @@ export function postComment({ name, text }) {
         body: JSON.stringify({
             name,
             text,
-            forceError: false
+            forceError: true,
         })
     })
         .then(response => {
             if (!response.ok) {
-                throw new Error("Ошибка добавления");
+                if (response.status === 500) {
+                    throw new Error("server_error_500");
+                }
+                throw new Error("Ошибка сервера: " + response.status);
             }
             return response.json();
+        })
+        .catch(error => {
+            if (error.message.includes("Failed to fetch")) {
+                throw new Error("Нет интернет-соединения");
+            }
+            throw error;
         });
 }
 
