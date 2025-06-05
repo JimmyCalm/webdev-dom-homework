@@ -135,3 +135,18 @@ body {
   .add-form-button:hover {
     opacity: 0.9;
   }
+
+  .initial-loading {
+  text-align: center;
+  padding: 20px;
+  font-size: 18px;
+  color: #666;
+}
+
+.loading-indicator {
+  text-align: center;
+  padding: 10px;
+  font-size: 16px;
+  color: #666;
+  display: none;
+}
