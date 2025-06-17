@@ -11,44 +11,35 @@ export function setAuthToken(token) {
 export function getComments() {
   return fetch(COMMENTS_URL)
     .then((response) => {
-      if (!response.ok) {
-        throw new Error("Ошибка сервера");
-      }
+      if (!response.ok) throw new Error("Ошибка сервера");
       return response.json();
     })
-    .then((data) => {
-      return data.comments.map((comment) => ({
+    .then((data) =>
+      data.comments.map((comment) => ({
         id: comment.id,
         author: comment.author,
         date: formatDate(comment.date),
         text: comment.text,
         likes: comment.likes,
         isLiked: comment.isLiked,
-      }));
-    });
+      })),
+    );
 }
 
 export function postComment({ text }) {
   return fetch(COMMENTS_URL, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${authToken}`,
-    },
+    headers: { Authorization: `Bearer ${authToken}` },
     body: JSON.stringify({ text }),
   })
     .then((response) => {
-      if (response.status === 401) {
-        throw new Error("auth_error");
-      }
-      if (!response.ok) {
-        throw new Error("server_error");
-      }
+      if (response.status === 401) throw new Error("auth_error");
+      if (!response.ok) throw new Error("server_error");
       return response.json();
     })
     .catch((error) => {
-      if (error.message.includes("Failed to fetch")) {
+      if (error.message.includes("Failed to fetch"))
         throw new Error("Нет интернет-соединения");
-      }
       throw error;
     });
 }
@@ -59,16 +50,8 @@ export function login({ login, password }) {
     body: JSON.stringify({ login, password }),
   }).then(async (response) => {
     const text = await response.text();
-
-    if (response.status === 400) {
-      console.error("Ошибка 400. Ответ сервера:", text);
-      throw new Error("Неверный логин или пароль");
-    }
-    if (!response.ok) {
-      console.error("Ошибка сервера:", text);
-      throw new Error("Ошибка сервера");
-    }
-
+    if (response.status === 400) throw new Error("Неверный логин или пароль");
+    if (!response.ok) throw new Error("Ошибка сервера");
     return JSON.parse(text);
   });
 }
