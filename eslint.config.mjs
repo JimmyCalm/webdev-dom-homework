@@ -5,8 +5,14 @@ import plugin from "eslint-plugin-prettier/recommended";
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
-  { languageOptions: { globals: globals.browser } },
+  {
+    languageOptions: { globals: globals.browser },
+    env: {
+      browser: true,
+    },
+  },
   pluginJs.configs.recommended,
   config,
   plugin,
 ];
+``
