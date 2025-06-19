@@ -5,13 +5,15 @@
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.4.1",
     "globals": "^16.2.0",
-    "prettier": "^3.5.3"
-  },
-  "dependencies": {
+    "prettier": "^3.5.3",
     "webpack": "^5.99.9",
     "webpack-cli": "^6.0.1"
   },
   "scripts": {
-      "dev": "webpack --mode development --watch"
-   }
+    "dev": "webpack --mode development --watch",
+    "build": "webpack --mode production"
+  },
+  "dependencies": {
+    "date-fns": "^4.1.0"
+  }
 }
